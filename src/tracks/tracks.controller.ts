@@ -7,6 +7,7 @@ import {
   HttpCode,
   HttpStatus,
   Param,
+  ParseUUIDPipe,
   Post,
   Put,
 } from '@nestjs/common';
@@ -25,26 +26,25 @@ export class TracksController {
   }
 
   @Get(':id')
-  getOne(@Param('id') id: string): Promise<Track> {
+  getOne(@Param('id', new ParseUUIDPipe()) id: string): Promise<Track> {
     return this.tracksService.getById(id);
   }
 
   @Post()
-  @HttpCode(HttpStatus.CREATED)
-  @Header('Cache-Control', 'none')
   create(@Body() CreateTrackDto: CreateTrackDto): Promise<Track> {
     return this.tracksService.create(CreateTrackDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string): Promise<Track> {
+  @HttpCode(HttpStatus.NO_CONTENT)
+  remove(@Param('id', new ParseUUIDPipe()) id: string): Promise<Track> {
     return this.tracksService.remove(id);
   }
 
   @Put(':id')
   update(
     @Body() UpdateTrackDto: UpdateTrackDto,
-    @Param('id') id: string,
+    @Param('id', new ParseUUIDPipe()) id: string,
   ): Promise<Track> {
     return this.tracksService.update(id, UpdateTrackDto);
   }

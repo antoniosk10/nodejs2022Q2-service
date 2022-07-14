@@ -1,6 +1,20 @@
+import { IsNotEmpty, IsNumber, IsString, ValidateIf } from 'class-validator';
+
 export class UpdateTrackDto {
-  readonly name: string;
-  readonly artistId: string | null;
-  readonly albumId: string | null;
-  readonly duration: number;
+  @IsNotEmpty()
+  @IsString()
+  name: string;
+
+  @ValidateIf((_, value) => value !== null)
+  @IsNotEmpty()
+  @IsString()
+  artistId: string | null;
+
+  @ValidateIf((_, value) => value !== null)
+  @IsNotEmpty()
+  @IsString()
+  albumId: string | null;
+
+  @IsNumber()
+  duration: number;
 }

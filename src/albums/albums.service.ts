@@ -1,4 +1,5 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
+import { TracksService } from 'src/tracks/tracks.service';
 import { v4 as uuidv4 } from 'uuid';
 import { CreateAlbumDto } from './dto/create-album.dto';
 import { UpdateAlbumDto } from './dto/update-album.dto';
@@ -7,6 +8,9 @@ import { Album } from './interfaces/album.interface';
 @Injectable()
 export class AlbumsService {
   private albums: Album[] = [];
+
+  @Inject(TracksService)
+  private readonly tracksService: TracksService;
 
   async getAll(): Promise<Album[]> {
     return this.albums;
@@ -26,7 +30,7 @@ export class AlbumsService {
   }
 
   async remove(id: string): Promise<Album> {
-    //TODO: delete from linked
+    await this.tracksService.removeAlbums(id);
     this.albums = this.albums.filter((album) => album.id !== id);
     return;
   }
