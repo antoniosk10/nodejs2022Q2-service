@@ -3,10 +3,10 @@ import {
   Controller,
   Delete,
   Get,
-  Header,
   HttpCode,
   HttpStatus,
   Param,
+  ParseUUIDPipe,
   Post,
   Put,
 } from '@nestjs/common';
@@ -25,27 +25,28 @@ export class UsersController {
   }
 
   @Get(':id')
-  getOne(@Param('id') id: string): Promise<User> {
+  getOne(@Param('id', new ParseUUIDPipe()) id: string): Promise<User> {
     return this.usersService.getById(id);
   }
 
   @Post()
-  @HttpCode(HttpStatus.CREATED)
-  @Header('Cache-Control', 'none')
-  create(@Body() CreateUserDto: CreateUserDto): Promise<User> {
+  create(
+    @Body() CreateUserDto: CreateUserDto,
+  ): Promise<Omit<User, 'password'>> {
     return this.usersService.create(CreateUserDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string): Promise<User> {
+  @HttpCode(HttpStatus.NO_CONTENT)
+  remove(@Param('id', new ParseUUIDPipe()) id: string): Promise<User> {
     return this.usersService.remove(id);
   }
 
   @Put(':id')
   update(
     @Body() updateProductDto: UpdatePasswordDto,
-    @Param('id') id: string,
-  ): Promise<User> {
+    @Param('id', new ParseUUIDPipe()) id: string,
+  ): Promise<Omit<User, 'password'>> {
     return this.usersService.update(id, updateProductDto);
   }
 }
