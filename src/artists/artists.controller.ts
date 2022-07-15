@@ -7,6 +7,7 @@ import {
   HttpCode,
   HttpStatus,
   Param,
+  ParseUUIDPipe,
   Post,
   Put,
 } from '@nestjs/common';
@@ -25,26 +26,25 @@ export class ArtistsController {
   }
 
   @Get(':id')
-  getOne(@Param('id') id: string): Promise<Artist> {
+  getOne(@Param('id', new ParseUUIDPipe()) id: string): Promise<Artist> {
     return this.artistsService.getById(id);
   }
 
   @Post()
-  @HttpCode(HttpStatus.CREATED)
-  @Header('Cache-Control', 'none')
   create(@Body() CreateArtistDto: CreateArtistDto): Promise<Artist> {
     return this.artistsService.create(CreateArtistDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string): Promise<Artist> {
+  @HttpCode(HttpStatus.NO_CONTENT)
+  remove(@Param('id', new ParseUUIDPipe()) id: string): Promise<Artist> {
     return this.artistsService.remove(id);
   }
 
   @Put(':id')
   update(
     @Body() UpdateArtistDto: UpdateArtistDto,
-    @Param('id') id: string,
+    @Param('id', new ParseUUIDPipe()) id: string,
   ): Promise<Artist> {
     return this.artistsService.update(id, UpdateArtistDto);
   }

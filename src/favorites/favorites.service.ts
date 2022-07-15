@@ -1,47 +1,108 @@
-import { Injectable } from '@nestjs/common';
-import { Favorites } from './interfaces/favorite.interface';
+import {
+  forwardRef,
+  Inject,
+  Injectable,
+  UnprocessableEntityException,
+} from '@nestjs/common';
+import { TracksService } from 'src/tracks/tracks.service';
+import { AlbumsService } from './../albums/albums.service';
+import { Album } from './../albums/interfaces/album.interface';
+import { ArtistsService } from './../artists/artists.service';
+import { Artist } from './../artists/interfaces/artist.interface';
+import { Track } from './../tracks/interfaces/track.interface';
+import {
+  FavoritesIds,
+  FavoritesResponse,
+} from './interfaces/favorite.interface';
 
 @Injectable()
 export class FavoritesService {
-  private favorites: Favorites = { tracks: [], albums: [], artists: [] };
+  constructor(
+    @Inject(forwardRef(() => TracksService))
+    private readonly tracksService: TracksService,
 
-  async getAll(): Promise<Favorites> {
-    return this.favorites;
+    @Inject(forwardRef(() => AlbumsService))
+    private readonly albumsService: AlbumsService,
+
+    @Inject(forwardRef(() => ArtistsService))
+    private readonly artistsService: ArtistsService,
+  ) {}
+
+  private favorites: FavoritesIds = { tracks: [], albums: [], artists: [] };
+
+  async getAll(): Promise<FavoritesResponse> {
+    const tracks: Track[] = await Promise.allSettled(
+      this.favorites.tracks.map((trackId) =>
+        this.tracksService.getById(trackId),
+      ),
+    ).then((res) =>
+      res.map((item) => (item as unknown as PromiseFulfilledResult<any>).value),
+    );
+    const albums: Album[] = await Promise.allSettled(
+      this.favorites.albums.map((albumId) =>
+        this.albumsService.getById(albumId),
+      ),
+    ).then((res) =>
+      res.map((item) => (item as unknown as PromiseFulfilledResult<any>).value),
+    );
+    const artists: Artist[] = await Promise.allSettled(
+      this.favorites.artists.map((artistId) =>
+        this.artistsService.getById(artistId),
+      ),
+    ).then((res) =>
+      res.map((item) => (item as unknown as PromiseFulfilledResult<any>).value),
+    );
+    return { artists, albums, tracks };
   }
 
-  async addTrack(id: string): Promise<Favorites> {
+  async addTrack(id: string): Promise<void> {
+    try {
+      await this.tracksService.getById(id);
+    } catch {
+      throw new UnprocessableEntityException();
+    }
     this.favorites.tracks.push(id);
-    return this.favorites;
+    return;
   }
 
-  async removeTrack(id: string): Promise<Favorites> {
+  async removeTrack(id: string): Promise<void> {
     this.favorites.tracks = this.favorites.tracks.filter(
       (trackId) => trackId !== id,
     );
-    return this.favorites;
+    return;
   }
 
-  async addAlbum(id: string): Promise<Favorites> {
+  async addAlbum(id: string): Promise<void> {
+    try {
+      await this.albumsService.getById(id);
+    } catch {
+      throw new UnprocessableEntityException();
+    }
     this.favorites.albums.push(id);
-    return this.favorites;
+    return;
   }
 
-  async removeAlbum(id: string): Promise<Favorites> {
+  async removeAlbum(id: string): Promise<void> {
     this.favorites.albums = this.favorites.albums.filter(
       (albumId) => albumId !== id,
     );
-    return this.favorites;
+    return;
   }
 
-  async addArtist(id: string): Promise<Favorites> {
+  async addArtist(id: string): Promise<void> {
+    try {
+      await this.artistsService.getById(id);
+    } catch {
+      throw new UnprocessableEntityException();
+    }
     this.favorites.artists.push(id);
-    return this.favorites;
+    return;
   }
 
-  async removeArtist(id: string): Promise<Favorites> {
+  async removeArtist(id: string): Promise<void> {
     this.favorites.artists = this.favorites.artists.filter(
       (artistId) => artistId !== id,
     );
-    return this.favorites;
+    return;
   }
 }
