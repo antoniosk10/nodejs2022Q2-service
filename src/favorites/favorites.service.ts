@@ -6,14 +6,10 @@ import {
 } from '@nestjs/common';
 import { TracksService } from 'src/tracks/tracks.service';
 import { AlbumsService } from './../albums/albums.service';
-import { Album } from './../albums/interfaces/album.interface';
 import { ArtistsService } from './../artists/artists.service';
-import { Artist } from './../artists/interfaces/artist.interface';
-import { Track } from './../tracks/interfaces/track.interface';
-import {
-  FavoritesIds,
-  FavoritesResponse,
-} from './interfaces/favorite.interface';
+import { Repository } from 'typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
+import { FavoriteEntity } from './entities/favorite.entity';
 
 @Injectable()
 export class FavoritesService {
@@ -26,83 +22,137 @@ export class FavoritesService {
 
     @Inject(forwardRef(() => ArtistsService))
     private readonly artistsService: ArtistsService,
+
+    @InjectRepository(FavoriteEntity)
+    private favoriteRepository: Repository<FavoriteEntity>,
   ) {}
 
-  private favorites: FavoritesIds = { tracks: [], albums: [], artists: [] };
+  async getFavsId(): Promise<string> {
+    const favsAll = await this.favoriteRepository.find();
 
-  async getAll(): Promise<FavoritesResponse> {
-    const tracks: Track[] = await Promise.allSettled(
-      this.favorites.tracks.map((trackId) =>
-        this.tracksService.getById(trackId),
-      ),
-    ).then((res) =>
-      res.map((item) => (item as unknown as PromiseFulfilledResult<any>).value),
+    if (favsAll.length) {
+      return favsAll[0].id;
+    }
+    const favs = await this.favoriteRepository.save(
+      this.favoriteRepository.create({
+        artistId: [],
+        albumId: [],
+        trackId: [],
+      }),
     );
-    const albums: Album[] = await Promise.allSettled(
-      this.favorites.albums.map((albumId) =>
-        this.albumsService.getById(albumId),
-      ),
-    ).then((res) =>
-      res.map((item) => (item as unknown as PromiseFulfilledResult<any>).value),
-    );
-    const artists: Artist[] = await Promise.allSettled(
-      this.favorites.artists.map((artistId) =>
-        this.artistsService.getById(artistId),
-      ),
-    ).then((res) =>
-      res.map((item) => (item as unknown as PromiseFulfilledResult<any>).value),
-    );
-    return { artists, albums, tracks };
+
+    return favs.id;
+  }
+
+  async getUserFavs(): Promise<FavoriteEntity> {
+    const favsId = await this.getFavsId();
+    const favs = await this.favoriteRepository.findOne({
+      where: { id: favsId },
+    });
+    //TODO: return objects
+    return favs;
   }
 
   async addTrack(id: string): Promise<void> {
-    try {
-      await this.tracksService.getById(id);
-    } catch {
-      throw new UnprocessableEntityException();
+    const track = await this.tracksService.getById(id);
+    const favsId = await this.getFavsId();
+    const favs = await this.favoriteRepository.findOne({
+      where: { id: favsId },
+    });
+
+    if (track) {
+      await this.favoriteRepository.save(
+        this.favoriteRepository.create({
+          ...favs,
+          trackId: [...favs.trackId, track.id],
+        }),
+      );
     }
-    this.favorites.tracks.push(id);
-    return;
+    throw new UnprocessableEntityException();
   }
 
   async removeTrack(id: string): Promise<void> {
-    this.favorites.tracks = this.favorites.tracks.filter(
-      (trackId) => trackId !== id,
-    );
-    return;
-  }
+    const favsId = await this.getFavsId();
 
-  async addAlbum(id: string): Promise<void> {
-    try {
-      await this.albumsService.getById(id);
-    } catch {
-      throw new UnprocessableEntityException();
-    }
-    this.favorites.albums.push(id);
-    return;
-  }
+    const favs = await this.favoriteRepository.findOne({
+      where: { id: favsId },
+    });
 
-  async removeAlbum(id: string): Promise<void> {
-    this.favorites.albums = this.favorites.albums.filter(
-      (albumId) => albumId !== id,
+    const updatedTrackId = favs.trackId.filter((idTrack) => idTrack !== id);
+
+    await this.favoriteRepository.save(
+      this.favoriteRepository.create({
+        ...favs,
+        trackId: updatedTrackId,
+      }),
     );
-    return;
   }
 
   async addArtist(id: string): Promise<void> {
-    try {
-      await this.artistsService.getById(id);
-    } catch {
-      throw new UnprocessableEntityException();
+    const favsId = await this.getFavsId();
+    const artist = await this.artistsService.getById(id);
+    const favs = await this.favoriteRepository.findOne({
+      where: { id: favsId },
+    });
+
+    if (artist) {
+      await this.favoriteRepository.save(
+        this.favoriteRepository.create({
+          ...favs,
+          artistId: [...favs.artistId, artist.id],
+        }),
+      );
     }
-    this.favorites.artists.push(id);
-    return;
+    throw new UnprocessableEntityException();
   }
 
   async removeArtist(id: string): Promise<void> {
-    this.favorites.artists = this.favorites.artists.filter(
-      (artistId) => artistId !== id,
+    const favsId = await this.getFavsId();
+    const favs = await this.favoriteRepository.findOne({
+      where: { id: favsId },
+    });
+
+    const updatedArtistId = favs.artistId.filter((idArtist) => idArtist !== id);
+
+    await this.favoriteRepository.save(
+      this.favoriteRepository.create({
+        ...favs,
+        artistId: updatedArtistId,
+      }),
     );
-    return;
+  }
+
+  async addAlbum(id: string): Promise<void> {
+    const favsId = await this.getFavsId();
+    const album = await this.albumsService.getById(id);
+    const favs = await this.favoriteRepository.findOne({
+      where: { id: favsId },
+    });
+
+    if (album) {
+      await this.favoriteRepository.save(
+        this.favoriteRepository.create({
+          ...favs,
+          albumId: [...favs.albumId, album.id],
+        }),
+      );
+    }
+    throw new UnprocessableEntityException();
+  }
+
+  async removeAlbum(id: string): Promise<void> {
+    const favsId = await this.getFavsId();
+    const favs = await this.favoriteRepository.findOne({
+      where: { id: favsId },
+    });
+
+    const updatedTrackId = favs.albumId.filter((idAlbum) => idAlbum !== id);
+
+    await this.favoriteRepository.save(
+      this.favoriteRepository.create({
+        ...favs,
+        trackId: updatedTrackId,
+      }),
+    );
   }
 }

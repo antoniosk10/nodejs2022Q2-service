@@ -36,9 +36,124 @@ export class migration1658318397648 implements MigrationInterface {
       }),
       true,
     );
+
+    await queryRunner.createTable(
+      new Table({
+        name: 'track',
+        columns: [
+          {
+            name: 'id',
+            type: 'uuid',
+            isPrimary: true,
+            default: 'uuid_generate_v4()',
+          },
+          {
+            name: 'name',
+            type: 'varchar',
+          },
+          {
+            name: 'artistId',
+            isNullable: true,
+            type: 'varchar',
+          },
+          {
+            name: 'albumId',
+            isNullable: true,
+            type: 'varchar',
+          },
+          {
+            name: 'duration',
+            type: 'int',
+          },
+        ],
+      }),
+      true,
+    );
+
+    await queryRunner.createTable(
+      new Table({
+        name: 'artist',
+        columns: [
+          {
+            name: 'id',
+            type: 'uuid',
+            isPrimary: true,
+            default: 'uuid_generate_v4()',
+          },
+          {
+            name: 'name',
+            type: 'varchar',
+          },
+          {
+            name: 'grammy',
+            type: 'boolean',
+          },
+        ],
+      }),
+      true,
+    );
+
+    await queryRunner.createTable(
+      new Table({
+        name: 'album',
+        columns: [
+          {
+            name: 'id',
+            type: 'uuid',
+            isPrimary: true,
+            default: 'uuid_generate_v4()',
+          },
+          {
+            name: 'name',
+            type: 'varchar',
+          },
+          {
+            name: 'year',
+            type: 'int',
+          },
+          {
+            name: 'artistId',
+            isNullable: true,
+            type: 'varchar',
+          },
+        ],
+      }),
+      true,
+    );
+
+    await queryRunner.createTable(
+      new Table({
+        name: 'favs',
+        columns: [
+          {
+            name: 'id',
+            type: 'uuid',
+            isPrimary: true,
+            default: 'uuid_generate_v4()',
+          },
+          {
+            name: 'artistId',
+            type: 'varchar',
+          },
+          {
+            name: 'albumId',
+            type: 'varchar',
+          },
+          {
+            name: 'trackId',
+            type: 'varchar',
+          },
+        ],
+      }),
+      true,
+    );
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.dropTable('user');
+    await queryRunner.dropTable('track');
+    await queryRunner.dropTable('artist');
+    await queryRunner.dropTable('album');
+    await queryRunner.dropTable('favs');
   }
 }
