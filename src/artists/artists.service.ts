@@ -39,7 +39,7 @@ export class ArtistsService {
 
   async create(artistDto: ArtistDto): Promise<ArtistEntity> {
     const artist = this.artistRepository.create(artistDto);
-    return (await this.artistRepository.save(artist)).toResponse();
+    return await this.artistRepository.save(artist);
   }
 
   async remove(id: string): Promise<void> {
@@ -50,19 +50,18 @@ export class ArtistsService {
     await this.tracksService.removeArtist(id);
     await this.albumsService.removeArtist(id);
     await this.favoritesService.removeArtist(id);
+    return;
   }
 
   async update(id: string, artistDto: ArtistDto): Promise<ArtistEntity> {
     const artist = await this.artistRepository.findOne({ where: { id } });
     if (artist) {
-      return (
-        await this.artistRepository.save(
-          this.artistRepository.create({
-            ...artist,
-            ...artistDto,
-          }),
-        )
-      ).toResponse();
+      return await this.artistRepository.save(
+        this.artistRepository.create({
+          ...artist,
+          ...artistDto,
+        }),
+      );
     }
     throw new NotFoundException();
   }

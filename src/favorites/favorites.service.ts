@@ -4,12 +4,18 @@ import {
   Injectable,
   UnprocessableEntityException,
 } from '@nestjs/common';
-import { TracksService } from 'src/tracks/tracks.service';
-import { AlbumsService } from './../albums/albums.service';
-import { ArtistsService } from './../artists/artists.service';
-import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
-import { FavoriteEntity } from './entities/favorite.entity';
+import { TracksService } from 'src/tracks/tracks.service';
+import { Repository } from 'typeorm';
+import { AlbumsService } from './../albums/albums.service';
+import { AlbumEntity } from './../albums/entities/album.entity';
+import { ArtistsService } from './../artists/artists.service';
+import { ArtistEntity } from './../artists/entities/artist.entity';
+import { TrackEntity } from './../tracks/entities/track.entity';
+import {
+  FavoriteEntity,
+  FavoriteEntityResult,
+} from './entities/favorite.entity';
 
 @Injectable()
 export class FavoritesService {
@@ -29,46 +35,61 @@ export class FavoritesService {
 
   async getFavsId(): Promise<string> {
     const favsAll = await this.favoriteRepository.find();
-
     if (favsAll.length) {
       return favsAll[0].id;
     }
     const favs = await this.favoriteRepository.save(
       this.favoriteRepository.create({
-        artistId: [],
-        albumId: [],
-        trackId: [],
+        artists: [],
+        albums: [],
+        tracks: [],
       }),
     );
 
     return favs.id;
   }
 
-  async getUserFavs(): Promise<FavoriteEntity> {
+  async getUserFavs(): Promise<FavoriteEntityResult> {
     const favsId = await this.getFavsId();
     const favs = await this.favoriteRepository.findOne({
       where: { id: favsId },
     });
-    //TODO: return objects
-    return favs;
+    const tracks: TrackEntity[] = await Promise.allSettled(
+      favs.tracks.map((trackId) => this.tracksService.getById(trackId)),
+    ).then((res) =>
+      res.map((item) => (item as unknown as PromiseFulfilledResult<any>).value),
+    );
+    const albums: AlbumEntity[] = await Promise.allSettled(
+      favs.albums.map((albumId) => this.albumsService.getById(albumId)),
+    ).then((res) =>
+      res.map((item) => (item as unknown as PromiseFulfilledResult<any>).value),
+    );
+    const artists: ArtistEntity[] = await Promise.allSettled(
+      favs.artists.map((artistId) => this.artistsService.getById(artistId)),
+    ).then((res) =>
+      res.map((item) => (item as unknown as PromiseFulfilledResult<any>).value),
+    );
+    return { ...favs, artists, albums, tracks };
   }
 
   async addTrack(id: string): Promise<void> {
-    const track = await this.tracksService.getById(id);
-    const favsId = await this.getFavsId();
-    const favs = await this.favoriteRepository.findOne({
-      where: { id: favsId },
-    });
+    try {
+      const track = await this.tracksService.getById(id);
+      const favsId = await this.getFavsId();
+      const favs = await this.favoriteRepository.findOne({
+        where: { id: favsId },
+      });
 
-    if (track) {
       await this.favoriteRepository.save(
         this.favoriteRepository.create({
           ...favs,
-          trackId: [...favs.trackId, track.id],
+          tracks: [...new Set([...favs.tracks, track.id])],
         }),
       );
+      return;
+    } catch {
+      throw new UnprocessableEntityException();
     }
-    throw new UnprocessableEntityException();
   }
 
   async removeTrack(id: string): Promise<void> {
@@ -78,32 +99,34 @@ export class FavoritesService {
       where: { id: favsId },
     });
 
-    const updatedTrackId = favs.trackId.filter((idTrack) => idTrack !== id);
+    const updatedTrackId = favs.tracks.filter((idTrack) => idTrack !== id);
 
     await this.favoriteRepository.save(
       this.favoriteRepository.create({
         ...favs,
-        trackId: updatedTrackId,
+        tracks: updatedTrackId,
       }),
     );
+    return;
   }
 
   async addArtist(id: string): Promise<void> {
-    const favsId = await this.getFavsId();
-    const artist = await this.artistsService.getById(id);
-    const favs = await this.favoriteRepository.findOne({
-      where: { id: favsId },
-    });
-
-    if (artist) {
+    try {
+      const favsId = await this.getFavsId();
+      const artist = await this.artistsService.getById(id);
+      const favs = await this.favoriteRepository.findOne({
+        where: { id: favsId },
+      });
       await this.favoriteRepository.save(
         this.favoriteRepository.create({
           ...favs,
-          artistId: [...favs.artistId, artist.id],
+          artists: [...new Set([...favs.artists, artist.id])],
         }),
       );
+      return;
+    } catch {
+      throw new UnprocessableEntityException();
     }
-    throw new UnprocessableEntityException();
   }
 
   async removeArtist(id: string): Promise<void> {
@@ -112,32 +135,35 @@ export class FavoritesService {
       where: { id: favsId },
     });
 
-    const updatedArtistId = favs.artistId.filter((idArtist) => idArtist !== id);
+    const updatedArtistId = favs.artists.filter((idArtist) => idArtist !== id);
 
     await this.favoriteRepository.save(
       this.favoriteRepository.create({
         ...favs,
-        artistId: updatedArtistId,
+        artists: updatedArtistId,
       }),
     );
+    return;
   }
 
   async addAlbum(id: string): Promise<void> {
-    const favsId = await this.getFavsId();
-    const album = await this.albumsService.getById(id);
-    const favs = await this.favoriteRepository.findOne({
-      where: { id: favsId },
-    });
+    try {
+      const favsId = await this.getFavsId();
+      const album = await this.albumsService.getById(id);
+      const favs = await this.favoriteRepository.findOne({
+        where: { id: favsId },
+      });
 
-    if (album) {
       await this.favoriteRepository.save(
         this.favoriteRepository.create({
           ...favs,
-          albumId: [...favs.albumId, album.id],
+          albums: [...new Set([...favs.albums, album.id])],
         }),
       );
+      return;
+    } catch {
+      throw new UnprocessableEntityException();
     }
-    throw new UnprocessableEntityException();
   }
 
   async removeAlbum(id: string): Promise<void> {
@@ -146,13 +172,14 @@ export class FavoritesService {
       where: { id: favsId },
     });
 
-    const updatedTrackId = favs.albumId.filter((idAlbum) => idAlbum !== id);
+    const updatedTrackId = favs.albums.filter((idAlbum) => idAlbum !== id);
 
     await this.favoriteRepository.save(
       this.favoriteRepository.create({
         ...favs,
-        trackId: updatedTrackId,
+        albums: updatedTrackId,
       }),
     );
+    return;
   }
 }

@@ -20,9 +20,7 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "docker:scan": "docker scan antoniosk10/homeservice",
-    "typeorm:create":"node ./node_modules/typeorm/cli migration:create ./db/migration",
-    "typeorm:generate":"node ./node_modules/typeorm/cli migration:generate -n newTables -d migration",
-    "typeorm:migration":"node ./node_modules/typeorm/cli migration:run -d ./src/migration/migration"
+    "typeorm:create":"node ./node_modules/typeorm/cli migration:create ./src/migration/migration"
   },
   "dependencies": {
     "@nestjs/common": "^8.0.0",

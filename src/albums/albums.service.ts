@@ -36,39 +36,40 @@ export class AlbumsService {
 
   async create(albumDto: AlbumDto): Promise<AlbumEntity> {
     const album = this.albumRepository.create(albumDto);
-    return (await this.albumRepository.save(album)).toResponse();
+    return await this.albumRepository.save(album);
   }
 
   async remove(id: string): Promise<void> {
     const result = await this.albumRepository.delete(id);
+
     if (result.affected === 0) {
       throw new NotFoundException();
     }
+
     await this.tracksService.removeAlbums(id);
     await this.favoritesService.removeAlbum(id);
+    return;
   }
 
   async update(id: string, albumDto: AlbumDto): Promise<AlbumEntity> {
     const album = await this.albumRepository.findOne({ where: { id } });
     if (album) {
-      return (
-        await this.albumRepository.save(
-          this.albumRepository.create({
-            ...album,
-            ...albumDto,
-          }),
-        )
-      ).toResponse();
+      return await this.albumRepository.save(
+        this.albumRepository.create({
+          ...album,
+          ...albumDto,
+        }),
+      );
     }
     throw new NotFoundException();
   }
 
   async removeArtist(id: string): Promise<void> {
     const albums = await this.getAll();
-    albums.forEach(
-      (album) =>
-        album.artistId === id && this.update(id, { ...album, artistId: null }),
-    );
+    for (const album of albums) {
+      album.artistId === id &&
+        (await this.update(album.id, { ...album, artistId: null }));
+    }
     return;
   }
 }

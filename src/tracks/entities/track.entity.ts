@@ -16,8 +16,4 @@ export class TrackEntity {
 
   @Column()
   duration: number;
-
-  toResponse() {
-    return this;
-  }
 }

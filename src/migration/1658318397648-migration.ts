@@ -132,15 +132,15 @@ export class migration1658318397648 implements MigrationInterface {
             default: 'uuid_generate_v4()',
           },
           {
-            name: 'artistId',
+            name: 'artists',
             type: 'varchar',
           },
           {
-            name: 'albumId',
+            name: 'albums',
             type: 'varchar',
           },
           {
-            name: 'trackId',
+            name: 'tracks',
             type: 'varchar',
           },
         ],

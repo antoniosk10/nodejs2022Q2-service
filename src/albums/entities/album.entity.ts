@@ -13,8 +13,4 @@ export class AlbumEntity {
 
   @Column()
   artistId: string | null;
-
-  toResponse() {
-    return this;
-  }
 }
