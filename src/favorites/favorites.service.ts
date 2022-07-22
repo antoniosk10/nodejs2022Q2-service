@@ -2,16 +2,14 @@ import {
   forwardRef,
   Inject,
   Injectable,
+  NotFoundException,
   UnprocessableEntityException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { TracksService } from 'src/tracks/tracks.service';
 import { Repository } from 'typeorm';
 import { AlbumsService } from './../albums/albums.service';
-import { AlbumEntity } from './../albums/entities/album.entity';
 import { ArtistsService } from './../artists/artists.service';
-import { ArtistEntity } from './../artists/entities/artist.entity';
-import { TrackEntity } from './../tracks/entities/track.entity';
 import {
   FavoriteEntity,
   FavoriteEntityResult,
@@ -54,21 +52,31 @@ export class FavoritesService {
     const favs = await this.favoriteRepository.findOne({
       where: { id: favsId },
     });
-    const tracks: TrackEntity[] = await Promise.allSettled(
-      favs.tracks.map((trackId) => this.tracksService.getById(trackId)),
-    ).then((res) =>
-      res.map((item) => (item as unknown as PromiseFulfilledResult<any>).value),
-    );
-    const albums: AlbumEntity[] = await Promise.allSettled(
-      favs.albums.map((albumId) => this.albumsService.getById(albumId)),
-    ).then((res) =>
-      res.map((item) => (item as unknown as PromiseFulfilledResult<any>).value),
-    );
-    const artists: ArtistEntity[] = await Promise.allSettled(
-      favs.artists.map((artistId) => this.artistsService.getById(artistId)),
-    ).then((res) =>
-      res.map((item) => (item as unknown as PromiseFulfilledResult<any>).value),
-    );
+
+    const tracks = [];
+    for (const trackId of favs.tracks) {
+      try {
+        const trackData = await this.tracksService.getById(trackId);
+        tracks.push(trackData);
+      } catch {}
+    }
+
+    const albums = [];
+    for (const albumId of favs.albums) {
+      try {
+        const albumData = await this.albumsService.getById(albumId);
+        albums.push(albumData);
+      } catch {}
+    }
+
+    const artists = [];
+    for (const artistId of favs.artists) {
+      try {
+        const artistData = await this.artistsService.getById(artistId);
+        artists.push(artistData);
+      } catch {}
+    }
+
     return { ...favs, artists, albums, tracks };
   }
 

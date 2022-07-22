@@ -67,8 +67,8 @@ export class AlbumsService {
   async removeArtist(id: string): Promise<void> {
     const albums = await this.getAll();
     for (const album of albums) {
-      album.artistId === id &&
-        (await this.update(album.id, { ...album, artistId: null }));
+      if (album.artistId === id)
+        await this.update(album.id, { ...album, artistId: null });
     }
     return;
   }

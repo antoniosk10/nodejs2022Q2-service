@@ -58,8 +58,8 @@ export class TracksService {
   async removeArtist(id: string): Promise<void> {
     const tracks = await this.getAll();
     for (const track of tracks) {
-      track.artistId === id &&
-        (await this.update(track.id, { ...track, artistId: null }));
+      if (track.artistId === id)
+        await this.update(track.id, { ...track, artistId: null });
     }
     return;
   }
@@ -67,8 +67,8 @@ export class TracksService {
   async removeAlbums(id: string): Promise<void> {
     const tracks = await this.getAll();
     for (const track of tracks) {
-      track.albumId === id &&
-        (await this.update(track.id, { ...track, albumId: null }));
+      if (track.albumId === id)
+        await this.update(track.id, { ...track, albumId: null });
     }
     return;
   }
