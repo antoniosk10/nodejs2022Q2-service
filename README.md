@@ -13,6 +13,12 @@
 git clone {repository URL}
 ```
 
+### Switch to branch `service-part-3`
+
+```
+git checkout service-part-3
+```
+
 ### Installing NPM modules
 
 ```
