@@ -2,7 +2,6 @@ import {
   forwardRef,
   Inject,
   Injectable,
-  NotFoundException,
   UnprocessableEntityException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';

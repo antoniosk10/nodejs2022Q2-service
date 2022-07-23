@@ -40,6 +40,7 @@ export class TracksService {
       throw new NotFoundException();
     }
     await this.favoritesService.removeTrack(id);
+    return;
   }
 
   async update(id: string, trackDto: TrackDto): Promise<TrackEntity> {
