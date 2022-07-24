@@ -3,70 +3,72 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { v4 as uuidv4 } from 'uuid';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdatePasswordDto } from './dto/update-user.dto';
-import { User } from './interfaces/user.interface';
+import { UserEntity } from './entities/user.entity';
 
 @Injectable()
 export class UsersService {
-  private users: User[] = [];
+  constructor(
+    @InjectRepository(UserEntity)
+    private userRepository: Repository<UserEntity>,
+  ) {}
 
-  async getAll(): Promise<User[]> {
-    return this.users;
+  async getAll(): Promise<UserEntity[]> {
+    return await this.userRepository.find();
   }
 
-  async getById(id: string): Promise<User> {
-    const user = this.users.find((user) => id === user.id);
+  async getById(id: string): Promise<UserEntity> {
+    const user = await this.userRepository.findOne({ where: { id } });
     if (user) return user;
     throw new NotFoundException();
   }
 
-  async create(userDto: CreateUserDto): Promise<Omit<User, 'password'>> {
+  async create(
+    userDto: CreateUserDto,
+  ): Promise<Omit<UserEntity, 'password' | 'toResponse'>> {
     const createTime = Date.now();
     const newUser = {
-      id: uuidv4(),
       ...userDto,
       version: 1,
       createdAt: createTime,
       updatedAt: createTime,
     };
-    const { password, ...responseUser } = newUser;
-    this.users.push(newUser);
-    return responseUser;
+    const user = this.userRepository.create(newUser);
+    return (await this.userRepository.save(user)).toResponse();
   }
 
-  async remove(id: string): Promise<User> {
-    const user = this.users.find((user) => id === user.id);
-    if (user) {
-      this.users = this.users.filter((user) => user.id !== id);
-      return;
+  async remove(id: string): Promise<void> {
+    const result = await this.userRepository.delete(id);
+    if (result.affected === 0) {
+      throw new NotFoundException();
     }
-    throw new NotFoundException();
   }
 
   async update(
     id: string,
     userDto: UpdatePasswordDto,
-  ): Promise<Omit<User, 'password'>> {
-    let updatedUser: User | null = null;
+  ): Promise<Omit<UserEntity, 'password' | 'toResponse'>> {
     const updatedAt = Date.now();
-    const user = this.users.find((user) => id === user.id);
+    const user = await this.userRepository.findOne({ where: { id } });
+
     if (user) {
-      if (user.password !== userDto.oldPassword)
+      if (user.password !== userDto.oldPassword) {
         throw new ForbiddenException('oldPassword is wrong');
-      this.users = this.users.map((user) =>
-        user.id === id
-          ? (updatedUser = {
-              ...user,
-              password: userDto.newPassword,
-              version: user.version + 1,
-              updatedAt,
-            })
-          : user,
-      );
-      const { password, ...responseUser } = updatedUser;
-      return responseUser;
+      }
+      return (
+        await this.userRepository.save(
+          this.userRepository.create({
+            ...user,
+            password: userDto.newPassword,
+            version: user.version + 1,
+            createdAt: +user.createdAt,
+            updatedAt: updatedAt,
+          }),
+        )
+      ).toResponse();
     }
     throw new NotFoundException();
   }

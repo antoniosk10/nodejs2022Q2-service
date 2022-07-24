@@ -11,40 +11,39 @@ import {
   Put,
 } from '@nestjs/common';
 import { AlbumsService } from './albums.service';
-import { CreateAlbumDto } from './dto/create-album.dto';
-import { UpdateAlbumDto } from './dto/update-album.dto';
-import { Album } from './interfaces/album.interface';
+import { AlbumDto } from './dto/album.dto';
+import { AlbumEntity } from './entities/album.entity';
 
 @Controller('album')
 export class AlbumsController {
   constructor(private readonly albumsService: AlbumsService) {}
 
   @Get()
-  getAll(): Promise<Album[]> {
+  getAll(): Promise<AlbumEntity[]> {
     return this.albumsService.getAll();
   }
 
   @Get(':id')
-  getOne(@Param('id', new ParseUUIDPipe()) id: string): Promise<Album> {
+  getOne(@Param('id', new ParseUUIDPipe()) id: string): Promise<AlbumEntity> {
     return this.albumsService.getById(id);
   }
 
   @Post()
-  create(@Body() CreateAlbumDto: CreateAlbumDto): Promise<Album> {
+  create(@Body() CreateAlbumDto: AlbumDto): Promise<AlbumEntity> {
     return this.albumsService.create(CreateAlbumDto);
   }
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  remove(@Param('id', new ParseUUIDPipe()) id: string): Promise<Album> {
+  remove(@Param('id', new ParseUUIDPipe()) id: string): Promise<void> {
     return this.albumsService.remove(id);
   }
 
   @Put(':id')
   update(
-    @Body() UpdateAlbumDto: UpdateAlbumDto,
+    @Body() UpdateAlbumDto: AlbumDto,
     @Param('id', new ParseUUIDPipe()) id: string,
-  ): Promise<Album> {
+  ): Promise<AlbumEntity> {
     return this.albumsService.update(id, UpdateAlbumDto);
   }
 }
