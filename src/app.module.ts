@@ -9,9 +9,11 @@ import configService from './ormconfig';
 import { APP_GUARD } from '@nestjs/core';
 import { AuthModule } from './auth/auth.module';
 import { AtGuard } from './common/guards';
+import { MyLogger } from './common/logger/logger.service';
 
 @Module({
   imports: [
+    MyLogger,
     AuthModule,
     UsersModule,
     TracksModule,
