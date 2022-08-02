@@ -47,6 +47,6 @@ export class UsersController {
     @Body() updateProductDto: UpdatePasswordDto,
     @Param('id', new ParseUUIDPipe()) id: string,
   ): Promise<Omit<UserEntity, 'password' | 'toResponse'>> {
-    return this.usersService.update(id, updateProductDto);
+    return this.usersService.updatePassword(id, updateProductDto);
   }
 }
