@@ -24,6 +24,27 @@ const logger = (message, context, type) => {
   }
 };
 
+const loggerError = (message, stack, type) => {
+  const dir = join(__dirname, '../../../logs/errors');
+  if (!existsSync(dir)) {
+    mkdirSync(dir);
+  }
+  const newLog = `[${type}][${message}] - ${stack}\n`;
+  let filePath = join(dir, `/logError-${MyLogger.lastLog}.txt`);
+  try {
+    const { size } = statSync(filePath);
+
+    if (size > +process.env.LOGGER_MAX_SIZE * 1000) {
+      MyLogger.lastLog = Date.now();
+      filePath = join(dir, `/logError-${MyLogger.lastLog}.txt`);
+    }
+
+    writeFileSync(filePath, newLog, { flag: 'as' });
+  } catch {
+    writeFileSync(filePath, newLog, { flag: 'as' });
+  }
+};
+
 @Injectable()
 export class MyLogger extends ConsoleLogger {
   constructor() {
@@ -32,9 +53,9 @@ export class MyLogger extends ConsoleLogger {
   }
   static lastLog = Date.now();
 
-  error(message: any, stack, context) {
-    logger(message, context, 'ERROR');
-    super.error(message, stack, context);
+  error(message, stack) {
+    loggerError(message, stack, 'ERROR');
+    super.error(message, stack);
   }
   log(message: any, context) {
     logger(message, context, 'LOG');
