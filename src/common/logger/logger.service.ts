@@ -13,7 +13,7 @@ const logger = (message, context, type) => {
   try {
     const { size } = statSync(filePath);
 
-    if (size > +process.env.LOGGER_MAX_SIZE) {
+    if (size > +process.env.LOGGER_MAX_SIZE * 1000) {
       MyLogger.lastLog = Date.now();
       filePath = join(dir, `/log-${MyLogger.lastLog}.txt`);
     }
