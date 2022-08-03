@@ -1,3 +1,4 @@
+import { logger } from './common/logger/logger.utils';
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { SwaggerModule } from '@nestjs/swagger';
@@ -22,3 +23,19 @@ async function bootstrap() {
   await app.listen(process.env.PORT || 4000);
 }
 bootstrap();
+
+process.on('unhandledRejection', (reason, promise) => {
+  logger(
+    `Unhandled Rejection at:', ${promise}, 'reason:', ${reason}`,
+    '',
+    'ERROR',
+  );
+});
+
+process.on('uncaughtException', (err, origin) => {
+  logger(
+    `Caught exception: ${err}\n` + `Exception origin: ${origin}`,
+    '',
+    'ERROR',
+  );
+});

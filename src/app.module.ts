@@ -14,7 +14,6 @@ import { LoggerMiddleware } from './common/logger/logger.middleware';
 
 @Module({
   imports: [
-    MyLogger,
     AuthModule,
     UsersModule,
     TracksModule,
@@ -22,6 +21,7 @@ import { LoggerMiddleware } from './common/logger/logger.middleware';
     ArtistsModule,
     FavoritesModule,
     TypeOrmModule.forRoot(configService),
+    MyLogger,
   ],
   providers: [
     {

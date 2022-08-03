@@ -13,10 +13,10 @@
 git clone {repository URL}
 ```
 
-### Switch to branch `service-part-3`
+### Switch to branch `service-part-5-logger`
 
 ```
-git checkout service-part-3
+git checkout service-part-5-logger
 ```
 
 ### Installing NPM modules
@@ -35,7 +35,7 @@ npm run docker:start
 
 After application running open new terminal and enter:
 
-To run all tests without authorization
+To run all tests without authorization  (!!!branch `service-part-3`!!!)
 
 ```
 npm run test
@@ -47,7 +47,7 @@ To run only one of all test suites
 npm run test -- <path to suite>
 ```
 
-To run all test with authorization
+To run all test with authorization (!!!branch `service-part-5-logger`!!!)
 
 ```
 npm run test:auth

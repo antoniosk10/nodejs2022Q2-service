@@ -1,49 +1,6 @@
 import { ConsoleLogger, Injectable } from '@nestjs/common';
-import { writeFileSync, existsSync, mkdirSync, statSync } from 'fs';
-import { join } from 'path';
+import { logger } from './logger.utils';
 import { LOGGER_LEVELS } from './loggerLevelsMap';
-
-const logger = (message, context, type) => {
-  const dir = join(__dirname, '../../../logs/');
-  if (!existsSync(dir)) {
-    mkdirSync(dir);
-  }
-  const newLog = `[${type}][${context}] - ${message}\n`;
-  let filePath = join(dir, `/log-${MyLogger.lastLog}.txt`);
-  try {
-    const { size } = statSync(filePath);
-
-    if (size > +process.env.LOGGER_MAX_SIZE * 1000) {
-      MyLogger.lastLog = Date.now();
-      filePath = join(dir, `/log-${MyLogger.lastLog}.txt`);
-    }
-
-    writeFileSync(filePath, newLog, { flag: 'as' });
-  } catch {
-    writeFileSync(filePath, newLog, { flag: 'as' });
-  }
-};
-
-const loggerError = (message, stack, type) => {
-  const dir = join(__dirname, '../../../logs/errors');
-  if (!existsSync(dir)) {
-    mkdirSync(dir);
-  }
-  const newLog = `[${type}][${message}] - ${stack}\n`;
-  let filePath = join(dir, `/logError-${MyLogger.lastLog}.txt`);
-  try {
-    const { size } = statSync(filePath);
-
-    if (size > +process.env.LOGGER_MAX_SIZE * 1000) {
-      MyLogger.lastLog = Date.now();
-      filePath = join(dir, `/logError-${MyLogger.lastLog}.txt`);
-    }
-
-    writeFileSync(filePath, newLog, { flag: 'as' });
-  } catch {
-    writeFileSync(filePath, newLog, { flag: 'as' });
-  }
-};
 
 @Injectable()
 export class MyLogger extends ConsoleLogger {
@@ -54,7 +11,7 @@ export class MyLogger extends ConsoleLogger {
   static lastLog = Date.now();
 
   error(message, stack) {
-    loggerError(message, stack, 'ERROR');
+    logger(message, '', 'ERROR', stack);
     super.error(message, stack);
   }
   log(message: any, context) {
