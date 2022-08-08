@@ -28,7 +28,7 @@ npm ci
 ### Running application in docker
 
 ```
-docker-compose up --build
+npm run docker:start
 ```
 
 ## Testing
