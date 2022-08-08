@@ -20,6 +20,9 @@ export class UserEntity {
   @Column()
   updatedAt: number;
 
+  @Column()
+  hashRt: string | null;
+
   toResponse() {
     const { password, ...response } = this;
     return response;
